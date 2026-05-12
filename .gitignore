@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+.ipynb_checkpoints/
+
+# PyTorch / checkpoints
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# Logs / experiment outputs
+*.log
+runs/
+wandb/
+swanlab/
+outputs/
+results/
+checkpoints/
+
+# LaTeX (if any)
+*.aux
+*.out
+*.synctex.gz
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
