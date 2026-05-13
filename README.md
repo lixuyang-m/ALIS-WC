@@ -28,6 +28,16 @@ The dashboard contains the two ablation conditions reported in the paper (Fig. 6
 
 In addition to the makespan and sparse-return curves shown in the paper, the dashboard exposes raw per-seed runs and additional training-time diagnostics.
 
+## Reward Shaping
+
+This release provides **two alternative potential-based reward shaping (PBRS) variants**, both valid under γ=1 and both leaving the optimal policy unchanged by the Ng-Harada-Russell theorem:
+
+1. **Task-completion PBRS** — `ψ(x) = #completed_tasks / #total_tasks ∈ [0,1]`. This is the conceptual form described in the paper, controlled by `REWARD_TASK_COMPLETION_POTENTIAL_WEIGHT` in `parameters.py`.
+
+2. **Elapsed-time PBRS** — `Φ(x) = −t_current(x)`, equivalent to a per-step time penalty `−λ·Δt`. Controlled by `MDP_DENSE_REWARD_WEIGHT`. It additionally provides correct multi-agent handling: when several robots reach decision points simultaneously, only the first agent in the random tie-break order is charged the actual Δt and all subsequent agents within the same epoch receive zero, so that the per-epoch time penalty is counted once (avoiding multi-counting and preserving telescoping).
+
+The two variants are switchable via the corresponding hyperparameters; setting the other to zero disables it. We did **not** further investigate the impact of these two PBRS variants — or of their coefficients — on the final performance; a controlled comparison is a natural extension for users of this codebase.
+
 ## Citation
 
 ```bibtex
