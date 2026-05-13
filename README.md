@@ -11,9 +11,10 @@
 
 - [x] Paper accepted at RSS 2026
 - [x] Method overview and training metrics dashboard
-- [ ] Code release (in preparation)
-- [ ] Pretrained checkpoints (in preparation)
-- [ ] Benchmark suite (in preparation)
+- [x] RL training and evaluation code
+- [x] Pretrained checkpoints (released as v0.1.0 assets)
+- [ ] GA / AVNR baselines (in preparation)
+- [ ] NL-to-LTL translator and benchmark generator suite (in preparation)
 
 ## Training Metrics
 
@@ -30,13 +31,28 @@ In addition to the makespan and sparse-return curves shown in the paper, the das
 
 ## Reward Shaping
 
-This release provides **two alternative potential-based reward shaping (PBRS) variants**, both valid under γ=1 and both leaving the optimal policy unchanged by the Ng-Harada-Russell theorem:
+Two alternative potential-based reward shaping (PBRS) variants are supported under γ=1; both leave the optimal policy unchanged by the Ng-Harada-Russell theorem. Either can be activated by setting its weight to a non-zero value.
 
-1. **Task-completion PBRS** — `ψ(x) = #completed_tasks / #total_tasks ∈ [0,1]`. This is the conceptual form described in the paper, controlled by `REWARD_TASK_COMPLETION_POTENTIAL_WEIGHT` in `parameters.py`.
+| Variant | Potential function | Controlled by | Notes |
+|---|---|---|---|
+| **Task-completion PBRS** | `ψ(x) = #completed_tasks / #total_tasks ∈ [0,1]` | `REWARD_TASK_COMPLETION_POTENTIAL_WEIGHT` | The conceptual form described in the paper. |
+| **Elapsed-time PBRS** | `Φ(x) = −t_current(x)`, per-step penalty `−λ·Δt` | `MDP_DENSE_REWARD_WEIGHT` | Multi-agent safe: only the first robot per simultaneous decision epoch is charged the actual Δt, preserving telescoping. |
 
-2. **Elapsed-time PBRS** — `Φ(x) = −t_current(x)`, equivalent to a per-step time penalty `−λ·Δt`. Controlled by `MDP_DENSE_REWARD_WEIGHT`. It additionally provides correct multi-agent handling: when several robots reach decision points simultaneously, only the first agent in the random tie-break order is charged the actual Δt and all subsequent agents within the same epoch receive zero, so that the per-epoch time penalty is counted once (avoiding multi-counting and preserving telescoping).
+> We did **not** further investigate the impact of these variants — or of their coefficients — on the final performance; a controlled comparison is a natural extension for users of this codebase.
 
-The two variants are switchable via the corresponding hyperparameters; setting the other to zero disables it. We did **not** further investigate the impact of these two PBRS variants — or of their coefficients — on the final performance; a controlled comparison is a natural extension for users of this codebase.
+## Notes on Retained Code Paths
+
+Beyond the configuration that produced the reported results, several alternative code paths from our development are kept in this release. They are **disabled by default** and do not affect any default training or evaluation run.
+
+| Component | Activated by | Default | Description |
+|---|---|---|---|
+| **SMDP execution mode** | `TrainParams.EXECUTION_MODE = 'smdp'` | `'mdp'` | Time-dependent discount `γ(τ) = exp(−β·τ)`; alternative to the paper's undiscounted MDP. |
+| **LTL encoding variants** | `TrainParams.LTL_ENCODING_TYPE ∈ {'A','B','C'}` | `'C'` | Three different schemes for encoding LTL clauses into the policy state; the paper uses `'C'`. |
+| **Soft LTL constraints** | `TrainParams.LTL_CONSTRAINT_TYPE ∈ {'SOFT_POLICY','SOFT_DISCRETE','LTL_POTENTIAL',…}` | `'LTL_POTENTIAL'` | Lagrangian / CVaR / risk-sensitive alternatives to hard shielding (`'HARD'`); activating them requires defining additional hyperparameters not exposed in the default `parameters.py`. |
+| **Vehicle failure modeling** | `EnvParams.VEHICLE_FAILURE_ENABLED = True` | `False` | Per-agent Weibull failure modeling and hazard accounting; not used in the paper. |
+| **Cost-quantile critic head** | (always present) | inert | `AttentionNet.cost_critic` output retained for legacy checkpoint compatibility; not consumed by any loss in the default configuration. |
+
+> Users wishing to revive any of these branches should expect to re-define the missing hyperparameters and validate end-to-end correctness; we did not maintain these paths after the paper's frozen configuration.
 
 ## Citation
 
@@ -50,10 +66,6 @@ The two variants are switchable via the corresponding hyperparameters; setting t
 ```
 
 (Final BibTeX will be updated after camera-ready DOI is assigned.)
-
-## Coming Soon
-
-The full source code (event-driven simulator, LTL shield, sleep-wake layer, PPO training scripts, baseline implementations, NL-to-LTL translator, and benchmark generation scripts) along with pretrained model checkpoints will be released here shortly.
 
 ## License
 

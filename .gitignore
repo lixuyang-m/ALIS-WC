@@ -6,7 +6,6 @@ __pycache__/
 .Python
 .venv/
 venv/
-env/
 .env
 *.egg-info/
 .ipynb_checkpoints/

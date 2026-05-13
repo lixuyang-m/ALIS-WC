@@ -1,0 +1,23 @@
+# Core dependencies for ALIS-WC training and evaluation.
+# Tested with Python 3.8.20.
+
+# Deep learning
+torch>=1.12
+
+# Distributed RL training
+ray>=2.0,<2.10
+
+# Numerical
+numpy>=1.21
+scipy>=1.7
+
+# Visualization (used by visualize_policy.py and benchmark plots)
+matplotlib>=3.4
+
+# Experiment tracking (choose ONE; the BACKEND in parameters.py defaults to swanlab)
+swanlab>=0.4
+# wandb>=0.15
+
+# Optional: torch-geometric is required only when LTL_ENABLED=True
+# (LTL shield + dependency graph). Install separately if needed:
+#   pip install torch-geometric
