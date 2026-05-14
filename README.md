@@ -5,6 +5,12 @@
 >
 > Accepted at RSS 2026
 
+### Demo: Stress Test (Tier 4, 100 Tasks, 36 Robots, 60 LTL Constraints)
+
+ALIS-WC scheduling 100 tasks with 36 heterogeneous robots under 60 hard LTL constraints (30 safety + 30 sequential). Robots blocked by sequential prerequisites are automatically put to sleep (faded with "Zzz") and woken when the prerequisite completes (gold highlight). Sequential constraint arcs transition from gray (waiting) → orange (predecessor done) → green (satisfied). All 100 tasks completed with 100% LTL satisfaction.
+
+![Stress Test Demo](docs/sleep_wake_stress_tier4.mp4)
+
 ![Method Overview](docs/method_overview.png)
 
 ## Status
