@@ -9,7 +9,7 @@
 
 ALIS-WC scheduling 100 tasks with 36 heterogeneous robots under 60 hard LTL constraints (30 safety + 30 sequential). Robots blocked by sequential prerequisites are automatically put to sleep (faded with "Zzz") and woken when the prerequisite completes (gold highlight). Sequential constraint arcs transition from gray (waiting) → orange (predecessor done) → green (satisfied). All 100 tasks completed with 100% LTL satisfaction.
 
-![Stress Test Demo](docs/sleep_wake_stress_tier4.mp4)
+![Stress Test Demo](docs/sleep_wake_stress_tier4.gif)
 
 ![Method Overview](docs/method_overview.png)
 
