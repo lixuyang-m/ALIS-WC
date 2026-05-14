@@ -16,6 +16,61 @@
 - [ ] GA / AVNR baselines (in preparation)
 - [ ] NL-to-LTL translator and benchmark generator suite (in preparation)
 
+## Installation
+
+Tested with Python 3.8 + CUDA 12.1.
+
+```bash
+git clone https://github.com/lixuyang-m/ALIS-WC.git
+cd ALIS-WC
+conda create -n alis-wc python=3.8 -y && conda activate alis-wc
+pip install -r requirements.txt
+# Optional, only if LTL_ENABLED=True:
+pip install torch-geometric
+```
+
+## Evaluation
+
+`evaluate_rl.py` reproduces the paper's RL-side numbers. Each paper row averages **three random seeds** (s42, s142, s242).
+
+```bash
+# Single seed, paper Tier 1 (no LTL)
+python evaluate_rl.py --model-path <ckpt>.pth --tier tier1 --num-envs 30
+
+# Three-seed aggregation (matches paper Table III / IV row exactly)
+python evaluate_rl.py \
+    --model-template "mdp_d10_noLTL_mhPPO_vNorm_ent0.005_s{seed}.pth" \
+    --seeds 42,142,242 \
+    --tier tier1 --num-envs 30
+
+# Evaluate on the bundled benchmark JSON (100 random instances)
+python evaluate_rl.py --model-path <ckpt>.pth --benchmark-file evaluation_benchmarks.json
+
+# LTL-aware evaluation
+python evaluate_rl.py --model-path <ckpt>.pth --tier tier1 --enable-ltl
+```
+
+`--tier` selects one of `tier1` … `tier4` and locks instance dimensions to the paper's configuration. Omit it to use `--benchmark-file` instead. Multi-seed mode (`--model-template` + `--seeds`) prints per-seed summaries and the aggregated `mean ± std` across seeds.
+
+## Training
+
+```bash
+# Reproduce a single ALIS-WC seed (10M steps, ~24 h on single RTX 4090)
+python driver.py --manual_seed 42 --ltl_enabled false --execution_mode mdp
+
+# Three-seed reproduction
+for s in 42 142 242; do
+  python driver.py --manual_seed $s --ltl_enabled false --execution_mode mdp
+done
+
+# Smoke test (1000 steps, ~2 min)
+python driver.py --max_training_steps 1000 --ltl_enabled false
+```
+
+Defaults in `parameters.py` already match the paper config: `MDP_DENSE_REWARD_WEIGHT=10`, `ENTROPY_BETA=0.005`, `USE_MULTI_HEAD_PPO=True`, `USE_VALUE_LOSS_NORMALIZATION=True`, `MAX_TRAINING_STEPS=10_000_000`.
+
+Logs go to a local SwanLab offline run by default (`./swanlog/`). Set `LoggingParams.MODE = "online"` and run `swanlab login` once for cloud sync.
+
 ## Training Metrics
 
 Live training metrics and per-seed raw curves are available on SwanLab:

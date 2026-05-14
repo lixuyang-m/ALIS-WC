@@ -262,7 +262,23 @@ def main() -> None:
         description="Evaluate an ALIS-WC checkpoint on a benchmark JSON."
     )
     parser.add_argument(
-        "--model-path", required=True, help="Path to the .pth checkpoint"
+        "--model-path",
+        default=None,
+        help="Path to a single .pth checkpoint (single-seed evaluation). "
+        "Mutually exclusive with --model-template.",
+    )
+    parser.add_argument(
+        "--model-template",
+        default=None,
+        help="Path template containing literal '{seed}', expanded against --seeds "
+        "for multi-seed aggregation. "
+        "Example: 'ckpts/mdp_d10_noLTL_mhPPO_vNorm_ent0.005_s{seed}.pth'.",
+    )
+    parser.add_argument(
+        "--seeds",
+        default="",
+        help="Comma-separated seed list (e.g. '42,142,242') used with "
+        "--model-template to aggregate mean ± std across seeds.",
     )
     parser.add_argument(
         "--benchmark-file",
@@ -298,6 +314,19 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # --- Resolve model paths (single vs multi-seed) ---
+    if args.model_template and args.seeds:
+        seed_list = [int(s.strip()) for s in args.seeds.split(",")]
+        model_paths = [args.model_template.replace("{seed}", str(s)) for s in seed_list]
+        multi_seed = True
+    elif args.model_path:
+        model_paths = [args.model_path]
+        multi_seed = False
+    else:
+        parser.error("Provide either --model-path or --model-template + --seeds.")
+        return  # unreachable
+
+    # --- Resolve benchmark instances ---
     if args.tier is not None:
         tier_cfg = BENCHMARK_CONFIGS[args.tier]
         num_envs = args.num_envs if args.num_envs is not None else 30
@@ -314,59 +343,100 @@ def main() -> None:
         bench_source = args.benchmark_file
 
     device = torch.device(args.device)
-    print(
-        f"[evaluate_rl] device={device}, model={args.model_path}, "
-        f"benchmarks={len(benchmarks)}, source={bench_source}, "
-        f"enable_ltl={args.enable_ltl}"
-    )
 
-    worker = build_worker(args.model_path, device)
+    # --- Run evaluation for each model seed ---
+    all_summaries: List[Dict[str, Any]] = []
 
-    results: List[Dict[str, Any]] = []
-    for i, benchmark in enumerate(benchmarks):
-        seed = benchmark["seed"]
-        print(f"[{i + 1:>3}/{len(benchmarks)}] seed={seed} ... ", end="", flush=True)
-        try:
-            r = run_one_benchmark(worker, benchmark, env_ranges, args.enable_ltl)
-            ms = f"{r['makespan']:.1f}" if r["makespan"] is not None else "N/A"
+    for mi, model_path in enumerate(model_paths):
+        if multi_seed:
+            print(f"\n{'=' * 60}")
+            print(f"[Seed {mi + 1}/{len(model_paths)}] {model_path}")
+            print(f"{'=' * 60}")
+        print(
+            f"[evaluate_rl] device={device}, model={model_path}, "
+            f"benchmarks={len(benchmarks)}, source={bench_source}, "
+            f"enable_ltl={args.enable_ltl}"
+        )
+
+        worker = build_worker(model_path, device)
+
+        results: List[Dict[str, Any]] = []
+        for i, benchmark in enumerate(benchmarks):
+            bseed = benchmark["seed"]
             print(
-                f"success={r['success']} completion={r['completion_rate']:.1%} "
-                f"makespan={ms} steps={r['decision_steps']}"
+                f"[{i + 1:>3}/{len(benchmarks)}] seed={bseed} ... ", end="", flush=True
             )
-            results.append(r)
-        except Exception as exc:  # noqa: BLE001
-            print(f"FAILED: {type(exc).__name__}: {exc}")
-            results.append({"seed": seed, "error": f"{type(exc).__name__}: {exc}"})
+            try:
+                r = run_one_benchmark(worker, benchmark, env_ranges, args.enable_ltl)
+                ms = f"{r['makespan']:.1f}" if r["makespan"] is not None else "N/A"
+                print(
+                    f"success={r['success']} completion={r['completion_rate']:.1%} "
+                    f"makespan={ms} steps={r['decision_steps']}"
+                )
+                results.append(r)
+            except Exception as exc:  # noqa: BLE001
+                print(f"FAILED: {type(exc).__name__}: {exc}")
+                results.append({"seed": bseed, "error": f"{type(exc).__name__}: {exc}"})
 
-    summary = summarise(results)
+        summary = summarise(results)
+        summary["model_path"] = model_path
+        all_summaries.append(summary)
 
-    print("\n=== Summary ===")
-    for k, v in summary.items():
-        if isinstance(v, float):
-            print(f"  {k}: {v:.4f}")
-        else:
-            print(f"  {k}: {v}")
+        print(f"\n--- Summary ({model_path}) ---")
+        for k, v in summary.items():
+            if isinstance(v, float):
+                print(f"  {k}: {v:.4f}")
+            else:
+                print(f"  {k}: {v}")
 
+    # --- Multi-seed aggregation ---
+    if multi_seed and len(all_summaries) > 1:
+        print(f"\n{'=' * 60}")
+        print(f"Multi-seed aggregation ({len(all_summaries)} seeds)")
+        print(f"{'=' * 60}")
+        agg_keys = [
+            "success_rate",
+            "avg_completion_rate",
+            "avg_makespan",
+            "avg_travel_dist",
+        ]
+        for k in agg_keys:
+            vals = [s[k] for s in all_summaries if s.get(k) is not None]
+            if vals:
+                m, s = float(np.mean(vals)), float(np.std(vals))
+                print(f"  {k}: {m:.4f} ± {s:.4f}")
+
+    # --- Save results ---
     output_file = args.output_file or (
         f"eval_results_{'ltl' if args.enable_ltl else 'no_ltl'}_{int(time.time())}.json"
     )
+    payload: Dict[str, Any] = {
+        "config": {
+            "model_paths": model_paths,
+            "benchmark_file": args.benchmark_file,
+            "tier": args.tier,
+            "enable_ltl": args.enable_ltl,
+            "num_envs": len(benchmarks),
+            "device": str(device),
+        },
+        "per_seed_summaries": all_summaries,
+    }
+    if multi_seed and len(all_summaries) > 1:
+        agg = {}
+        for k in [
+            "success_rate",
+            "avg_completion_rate",
+            "avg_makespan",
+            "avg_travel_dist",
+        ]:
+            vals = [s[k] for s in all_summaries if s.get(k) is not None]
+            if vals:
+                agg[k] = {"mean": float(np.mean(vals)), "std": float(np.std(vals))}
+        payload["aggregated"] = agg
+
     with open(output_file, "w") as f:
-        json.dump(
-            {
-                "results": results,
-                "summary": summary,
-                "config": {
-                    "model_path": args.model_path,
-                    "benchmark_file": args.benchmark_file,
-                    "enable_ltl": args.enable_ltl,
-                    "num_envs": len(benchmarks),
-                    "device": str(device),
-                },
-            },
-            f,
-            indent=2,
-        )
-    print(f"Results saved to: {output_file}")
+        json.dump(payload, f, indent=2)
+    print(f"\nResults saved to: {output_file}")
 
 
 if __name__ == "__main__":
