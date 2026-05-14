@@ -14,6 +14,9 @@ scipy>=1.7
 # Visualization (used by visualize_policy.py and benchmark plots)
 matplotlib>=3.4
 
+# Baseline evaluation (GA / AVNR use pandas for metrics aggregation)
+pandas>=1.3
+
 # Experiment tracking (choose ONE; the BACKEND in parameters.py defaults to swanlab)
 swanlab>=0.4
 # wandb>=0.15

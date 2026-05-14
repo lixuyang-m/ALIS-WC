@@ -13,7 +13,7 @@
 - [x] Method overview and training metrics dashboard
 - [x] RL training and evaluation code
 - [x] Pretrained checkpoints (released as v0.1.0 assets)
-- [ ] GA / AVNR baselines (in preparation)
+- [x] GA / AVNR / Greedy baselines
 - [ ] NL-to-LTL translator and benchmark generator suite (in preparation)
 
 ## Installation
@@ -30,6 +30,8 @@ pip install torch-geometric
 ```
 
 ## Evaluation
+
+### ALIS-WC (RL policy)
 
 `evaluate_rl.py` reproduces the paper's RL-side numbers. Each paper row averages **three random seeds** (s42, s142, s242).
 
@@ -51,6 +53,24 @@ python evaluate_rl.py --model-path <ckpt>.pth --tier tier1 --enable-ltl
 ```
 
 `--tier` selects one of `tier1` … `tier4` and locks instance dimensions to the paper's configuration. Omit it to use `--benchmark-file` instead. Multi-seed mode (`--model-template` + `--seeds`) prints per-seed summaries and the aggregated `mean ± std` across seeds.
+
+### Baselines (GA / AVNR / Greedy)
+
+`evaluate_baselines.py` runs the three optimisation / search baselines on the same paper tiers, through the same LTL-shielded simulator used by the RL evaluation. Each instance has a per-tier time budget (`tier1=30s`, `tier2=60s`, `tier3=120s`, `tier4=240s`).
+
+```bash
+# Single baseline, Tier 1, 30 random instances (no LTL)
+python evaluate_baselines.py --method ga    --tier tier1 --num-envs 30
+python evaluate_baselines.py --method avnr  --tier tier1 --num-envs 30
+python evaluate_baselines.py --method greedy --tier tier1 --num-envs 30
+
+# All three baselines in one pass, with LTL clauses enforced
+python evaluate_baselines.py --method ga,avnr,greedy --tier tier1 --num-envs 30 --enable-ltl
+```
+
+The shared LTL semantics (`--enable-ltl`) matches `evaluate_rl.py`: SAFETY clauses become per-agent forbidden-node masks and SEQUENTIAL clauses become per-task prerequisites, both enforced inside `baseline/simulator.py`. **GA** evaluates every chromosome through the shielded simulator (its search is LTL-aware); **AVNR** uses an analytical surrogate inside its VND and shields only at final-metric extraction; **Greedy** queries the three-mask pipeline at every decision epoch.
+
+`--decide-quantity` mirrors the same default as RL's hardcoded full-load policy: when omitted (default), all baselines load at the agent's full capacity per cargo type, matching the paper. Passing the flag lets GA/AVNR optimise quantity ratios as part of the search.
 
 ## Training
 
