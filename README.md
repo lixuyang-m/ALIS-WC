@@ -139,6 +139,21 @@ Beyond the configuration that produced the reported results, several alternative
 
 The RL training framework (event-driven PPO with attention-based actor-critic) in this release builds upon the codebase of [HeteroMRTA](https://github.com/marmotlab/HeteroMRTA) by Dai et al. (IEEE RA-L 2025), which provides the foundational architecture for heterogeneous multi-robot task allocation via reinforcement learning. We gratefully acknowledge the authors for releasing their code under the Apache-2.0 license.
 
+Our main modifications to the original codebase include:
+
+- **Problem reformulation**:
+
+  | Aspect | HeteroMRTA (original) | ALIS-WC (ours) |
+  |---|---|---|
+  | Trip mode | Single-trip (each agent visits tasks once) | Multi-trip (agents return to depots to reload) |
+  | Service model | Implicit (agent presence fulfils requirements) | Explicit Load / Unload operations |
+  | Depot structure | One depot per species (depot = species home) | Independent multi-depot with finite inventories |
+  | Temporal-logic constraints | None | LTL safety + sequential clauses with shield and sleep-wake |
+
+- **Algorithm upgrade**: We replaced the original REINFORCE policy-gradient algorithm with Proximal Policy Optimization (PPO) for more stable training and higher sample efficiency.
+
+- **NL-to-LTL front-end**: We additionally implemented a natural-language-to-LTL interface that translates human-language mission descriptions into formal LTL clauses via a domain-specialised fine-tuned 8B LLM, enabling non-expert operators to specify temporal-logic constraints interactively.
+
 ```bibtex
 @article{dai2025heteromrta,
   author  = {Weiheng Dai and Utkarsh Rai and Jimmy Chiun and Yuhong Cao and Guillaume Sartoretti},
