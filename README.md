@@ -135,6 +135,22 @@ Beyond the configuration that produced the reported results, several alternative
 
 > Users wishing to revive any of these branches should expect to re-define the missing hyperparameters and validate end-to-end correctness; we did not maintain these paths after the paper's frozen configuration.
 
+## Acknowledgements
+
+The RL training framework (event-driven PPO with attention-based actor-critic) in this release builds upon the codebase of [HeteroMRTA](https://github.com/marmotlab/HeteroMRTA) by Dai et al. (IEEE RA-L 2025), which provides the foundational architecture for heterogeneous multi-robot task allocation via reinforcement learning. We gratefully acknowledge the authors for releasing their code under the Apache-2.0 license.
+
+```bibtex
+@article{dai2025heteromrta,
+  author  = {Weiheng Dai and Utkarsh Rai and Jimmy Chiun and Yuhong Cao and Guillaume Sartoretti},
+  title   = {Heterogeneous Multi-robot Task Allocation and Scheduling via Reinforcement Learning},
+  journal = {{IEEE} Robotics Autom. Lett.},
+  volume  = {10},
+  number  = {3},
+  pages   = {2654--2661},
+  year    = {2025}
+}
+```
+
 ## Citation
 
 ```bibtex

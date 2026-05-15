@@ -1,3 +1,9 @@
+# This file is derived from the HeteroMRTA codebase by Dai et al.
+# (IEEE RA-L 2025), originally released under the Apache-2.0 License.
+# Original source: https://github.com/marmotlab/HeteroMRTA
+# Modifications: LTL encoding variants, sleep-wake masking integration,
+#   multi-head PPO policy factorisation, cost-quantile critic head.
+
 import torch
 import torch.nn as nn
 import math

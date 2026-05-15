@@ -1,3 +1,9 @@
+# This file is derived from the HeteroMRTA codebase by Dai et al.
+# (IEEE RA-L 2025), originally released under the Apache-2.0 License.
+# Original source: https://github.com/marmotlab/HeteroMRTA
+# Modifications: event-driven MDP/SMDP execution modes, multi-head PPO,
+#   LTL constraint support, value-loss normalisation, SwanLab logging.
+
 import torch
 import torch.optim as optim
 import torch.nn.functional as F

@@ -1,3 +1,9 @@
+# This file is derived from the HeteroMRTA codebase by Dai et al.
+# (IEEE RA-L 2025), originally released under the Apache-2.0 License.
+# Original source: https://github.com/marmotlab/HeteroMRTA
+# Modifications: MDP/SMDP execution modes, two PBRS reward variants,
+#   LTL constraint parameters, curriculum learning toggle, logging config.
+
 import math
 
 

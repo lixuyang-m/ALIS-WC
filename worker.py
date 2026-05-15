@@ -1,3 +1,10 @@
+# This file is derived from the HeteroMRTA codebase by Dai et al.
+# (IEEE RA-L 2025), originally released under the Apache-2.0 License.
+# Original source: https://github.com/marmotlab/HeteroMRTA
+# Modifications: event-driven sleep-wake scheduling, three-mask pipeline
+#   (AllocationFilter / FeasibilityMask / SequentialShield), two PBRS
+#   variants (elapsed-time / task-completion), LTL monitor integration.
+
 import time
 import torch
 import numpy as np
