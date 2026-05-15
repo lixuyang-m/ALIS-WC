@@ -11,6 +11,10 @@ ALIS-WC scheduling 100 tasks with 36 heterogeneous robots under 60 hard LTL cons
 
 ![Stress Test Demo](docs/sleep_wake_stress_tier4.gif)
 
+### Method Overview
+
+Overall architecture of ALIS-WC: natural-language mission descriptions are translated into formal LTL clauses, which feed the LTL shield and sleep-wake coordination layer wrapping a learned attention-based scheduling policy operating over an asynchronous event-driven timeline.
+
 ![Method Overview](docs/method_overview.png)
 
 ## Status
@@ -21,6 +25,15 @@ ALIS-WC scheduling 100 tasks with 36 heterogeneous robots under 60 hard LTL cons
 - [x] Pretrained checkpoints (released as v0.1.0 assets)
 - [x] GA / AVNR / Greedy baselines
 - [ ] NL-to-LTL translator and benchmark generator suite (in preparation)
+
+## Roadmap
+
+We are actively extending ALIS-WC in the following directions:
+
+| Direction | Status | Notes |
+|---|---|---|
+| Vectorised parallel environment | 🔨 In progress | Significantly faster training; to be released in a future update. |
+| Unified high-level scheduling + low-level motion planning | 🔨 In progress | Integrating path planning into the vectorised environment for end-to-end deployment. |
 
 ## Installation
 
