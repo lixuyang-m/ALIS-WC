@@ -50,6 +50,15 @@ pip install torch-geometric
 
 ## Evaluation
 
+All scheduling metrics are obtained by rolling out the selected policy or plan
+in the same deterministic discrete-event environment. The core execution
+dynamics live in `env/task_env.py`, while `baseline/simulator.py` provides the
+shared rollout and metric-extraction path for GA / AVNR / Greedy baselines.
+This common execution layer handles asynchronous robot readiness, depot
+inventories, load/unload events, feasibility masks, and LTL shielding, so
+makespan, completion rate, and LTL satisfaction are measured under one protocol
+across methods.
+
 ### ALIS-WC (RL policy)
 
 `evaluate_rl.py` reproduces the paper's RL-side numbers. Each paper row averages **three random seeds** (s42, s142, s242).
