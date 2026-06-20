@@ -160,14 +160,15 @@ class AVNRSolution:
 
     def _calculate_objective(self) -> float:
         """
-        计算目标函数值 - MAKESPAN (多趟运输模型)
+        Calculate the AVNR search objective for the multi-trip model.
 
-        【修改 - 使用近似评估加速VND搜索】
-        VND邻域搜索需要评估大量候选解（数千个），使用精确仿真太慢。
-        因此在搜索过程中使用近似评估，最终解的精确评估在benchmark_ijcai.py中进行。
+        VND evaluates many neighboring candidates, so AVNR uses an analytical
+        surrogate objective during neighborhood search. The returned trip plan
+        is converted to the shared GA-style format and evaluated through
+        ``baseline.simulator`` for final reported metrics.
 
         Returns:
-            objective: Makespan（越小越好）
+            Objective value; lower is better.
         """
         if not self.agent_trips:
             return float('inf')

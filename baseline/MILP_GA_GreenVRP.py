@@ -1055,20 +1055,20 @@ class GeneticAlgorithm:
 
     def evaluate_fitness(self, individual, use_exact=False):
         """
-        评估个体适应度（使用真实环境仿真器）
+        Evaluate one GA chromosome through the shared executable rollout.
 
-        【重要修改】：
-        - 使用环境仿真器计算真实makespan，而不是近似值
-        - 确保与RL方法使用相同的评估标准
-        - 应用基础掩码，确保动作符合物理规则
-        - 【新增】支持decide_quantity参数
+        The chromosome is a high-level route plan. During fitness evaluation we
+        expand it through ``baseline.simulator.simulate_solution_execution`` so
+        that makespan, completion rate, physical feasibility, and LTL monitor /
+        mask effects follow the same TaskEnv execution path used for final
+        metric extraction.
 
         Args:
-            individual: 个体字典
-            use_exact: 是否使用精确评估（已废弃，保留参数以兼容）
+            individual: GA chromosome dictionary.
+            use_exact: Kept for backward compatibility.
 
         Returns:
-            fitness: 适应度值（越小越好）
+            Fitness value; lower is better.
         """
         # 检查是否有环境仿真器
         if not hasattr(self, "env") or self.env is None:
@@ -1086,9 +1086,9 @@ class GeneticAlgorithm:
 
         # 使用环境仿真器计算真实makespan
         try:
-            # Shared LTL-shielded simulator (same one used for final-metric
-            # extraction); GA invokes it once per chromosome per generation,
-            # making the search itself LTL-aware.
+            # Shared executable rollout used for final metrics as well. LTL
+            # constraints affect GA selection through monitor/mask outcomes
+            # observed during this chromosome rollout.
             from baseline.simulator import simulate_solution_execution
 
             makespan, travel_dist, time_cost, completion_rate = (

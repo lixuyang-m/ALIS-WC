@@ -84,7 +84,7 @@ python evaluate_rl.py --model-path <ckpt>.pth --tier tier1 --enable-ltl
 
 ### Baselines (GA / AVNR / Greedy)
 
-`evaluate_baselines.py` runs the three optimisation / search baselines on the same paper tiers, through the same LTL-shielded simulator used by the RL evaluation. Each instance has a per-tier time budget (`tier1=30s`, `tier2=60s`, `tier3=120s`, `tier4=240s`).
+`evaluate_baselines.py` runs the three optimisation / search baselines on the same paper tiers. Each baseline is evaluated through an LTL-shielded execution path built on `TaskEnv`, and each instance has a per-tier time budget (`tier1=30s`, `tier2=60s`, `tier3=120s`, `tier4=240s`).
 
 ```bash
 # Single baseline, Tier 1, 30 random instances (no LTL)
@@ -96,9 +96,19 @@ python evaluate_baselines.py --method greedy --tier tier1 --num-envs 30
 python evaluate_baselines.py --method ga,avnr,greedy --tier tier1 --num-envs 30 --enable-ltl
 ```
 
-The shared LTL semantics (`--enable-ltl`) matches `evaluate_rl.py`: SAFETY clauses become per-agent forbidden-node masks and SEQUENTIAL clauses become per-task prerequisites, both enforced inside `baseline/simulator.py`. **GA** evaluates every chromosome through the shielded simulator (its search is LTL-aware); **AVNR** uses an analytical surrogate inside its VND and shields only at final-metric extraction; **Greedy** queries the three-mask pipeline at every decision epoch.
+The shared LTL semantics (`--enable-ltl`) matches `evaluate_rl.py`: SAFETY clauses become per-agent forbidden-node masks and SEQUENTIAL clauses become per-task prerequisites, both enforced inside `baseline/simulator.py`.
 
 `--decide-quantity` mirrors the same default as RL's hardcoded full-load policy: when omitted (default), all baselines load at the agent's full capacity per cargo type, matching the paper. Passing the flag lets GA/AVNR optimise quantity ratios as part of the search.
+
+### Baseline Adaptation Protocol
+
+**Plan representations.** GA and AVNR are adapted as offline high-level plan generators. GA represents each candidate as per-robot task routes, start/end depots, optional loading quantities, and cargo-type priorities. AVNR represents each candidate as per-robot trip assignments over decomposed delivery requests, where each request specifies a target task, cargo type, and demand quantity. Greedy is implemented as an online event-driven heuristic that queries the current environment state and action masks at each decision event before selecting an action.
+
+**Shared execution path.** Final metrics for all baselines are computed through the same `TaskEnv` transition interface and metric-extraction path. For GA/AVNR, `baseline/simulator.py` expands the high-level plans into primitive `MOVE`, `LOAD`, and `UNLOAD` operations and executes them in `TaskEnv`; for Greedy, actions are generated and executed directly in the same event-driven environment. During execution, the baselines share the `agent_observe`, action-mask, `agent_step`, and `LTLMonitor` update interfaces, so makespan, task completion rate, travel distance, and LTL satisfaction are recorded and aggregated from the same environment execution process.
+
+**Search and evaluation.** GA uses this executable rollout as its chromosome fitness. AVNR uses an analytical surrogate objective during neighborhood search for efficiency, and then evaluates the returned trip plan through the same execution path for final metrics. Greedy selects executable actions greedily from the current mask at each event. When LTL is enabled, GA/AVNR incorporate LTL constraints through the shared monitor/mask enforcement during rollout, rather than through separately designed LTL-specific search operators.
+
+**Scope of specialization.** Strongly specialized GA/AVNR variants could explicitly encode timed `MOVE`/`LOAD`/`UNLOAD` operations, depot-stock evolution, cargo types, loading/unloading quantities, and LTL precedence relations inside their search operators or repair mechanisms. We view such methods as domain-specific metaheuristics redesigned for this environment, which could be studied as a separate extension. The baseline comparison in this repository focuses on offline high-level route/trip planning, online greedy heuristics, and ALIS-WC under a shared transition interface, the same action-masking mechanism, and the same LTL monitor.
 
 ## Training
 

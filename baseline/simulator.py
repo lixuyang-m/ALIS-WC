@@ -1,5 +1,4 @@
-"""Shared LTL-shielded simulator and metric helpers used by every baseline
-(GA, AVNR, Greedy) at evaluation time.
+"""Shared event-driven executor and metric helpers for the baselines.
 
 This module exposes three things:
 
@@ -9,9 +8,10 @@ This module exposes three things:
 - ``generate_fixed_ltl_constraints``: deterministic generator of the
   paper's LTL clause set for a given environment + tier.
 - ``simulate_solution_execution`` and ``calculate_solution_metrics``:
-  the same shielded executor and metric extractor used by every baseline
-  in the paper. Identical to the version in
-  ``RSS_2026/ALIS-WC_code/benchmark_ijcai.py`` at the time of submission.
+  the plan-to-action executor and metric extractor used by GA / AVNR final
+  evaluation, and the common metric path for Greedy. The executor expands
+  high-level route/trip plans into TaskEnv MOVE / LOAD / UNLOAD operations and
+  applies the shared LTL monitor/mask interfaces during rollout.
 """
 
 from __future__ import annotations
@@ -147,20 +147,20 @@ def simulate_solution_execution(
     use_in_flight_reservation: bool = True
 ) -> Tuple[float, float, float, float]:
     """
-    使用真实环境逻辑执行solution，获取准确的makespan和其他指标
+    Execute a high-level GA/AVNR plan through TaskEnv and collect metrics.
 
-    完全使用TaskEnv的agent_step逻辑，包括：
-    - 多agent决策队列
-    - 资源竞争（depot库存）
-    - 真实的时间推进
-    - 装卸货时间
-    - 任务执行时间
-    - 【新增】LTL约束检查（SAFETY和SEQUENTIAL）
+    The solution specifies route/trip structure, not a fully timed primitive
+    schedule. This executor interprets that plan into TaskEnv operations while
+    reusing the same event progression, action masks, depot-stock updates,
+    load/unload timing, task-completion updates, and LTL monitor updates used by
+    the online rollouts.
 
-    LTL处理策略（统一评估，不帮GA做LTL-aware优化）：
-    - SAFETY约束：如果agent被禁止访问某任务，跳过该任务
-    - SEQUENTIAL约束：如果前置任务未完成，跳过当前任务
-    - GA是离线规划，无法动态调整，跳过的任务可能导致完成率<100%
+    With LTL enabled, constraints are enforced through the shared monitor/mask
+    path during rollout:
+    - SAFETY clauses mask forbidden destinations for the corresponding agent.
+    - SEQUENTIAL clauses mask successor tasks until prerequisites complete.
+    If a high-level offline plan cannot continue under these rollout-time
+    constraints, the resulting completion rate and metrics reflect that outcome.
 
     Args:
         env: 环境实例
