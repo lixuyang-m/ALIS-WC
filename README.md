@@ -22,9 +22,11 @@ Overall architecture of ALIS-WC: natural-language mission descriptions are trans
 - [x] Paper accepted at RSS 2026
 - [x] Method overview and training metrics dashboard
 - [x] RL training and evaluation code
-- [x] Pretrained checkpoints (released as v0.1.0 assets)
+- [x] Pretrained RL checkpoints (released as v0.1.0 assets)
 - [x] GA / AVNR / Greedy baselines
-- [ ] NL-to-LTL translator and benchmark generator suite (in preparation)
+- [x] NL-to-LTL full-parameter / LoRA training, inference, and evaluation
+- [x] NL-to-LTL datasets and saved prediction evaluation
+- [ ] Extended benchmark generator suite (in preparation)
 
 ## Roadmap
 
@@ -37,7 +39,8 @@ We are actively extending ALIS-WC in the following directions:
 
 ## Installation
 
-Tested with Python 3.8 + CUDA 12.1.
+The RL scheduling code is tested with Python 3.8 + CUDA 12.1.
+For the language-model tools, use the separate environment described below.
 
 ```bash
 git clone https://github.com/lixuyang-m/ALIS-WC.git
@@ -47,6 +50,77 @@ pip install -r requirements.txt
 # Optional, only if LTL_ENABLED=True:
 pip install torch-geometric
 ```
+
+## Natural-language to LTL
+
+The [`llm/` tools](llm/README.md) support Qwen3-8B full-parameter and LoRA
+fine-tuning, model loading for new instructions, and evaluation on the bundled
+simple/hard datasets. Instructions are translated into JSON safety and task-order
+constraints, with an optional conversion to the scheduler's clause format.
+
+| Workflow | Entry point | Inputs |
+|---|---|---|
+| Fine-tune a translator | `python -m llm.train` | Base model, training data, full-parameter or LoRA configuration |
+| Translate a new instruction | `python -m llm.infer` | Model directory, optional LoRA adapter, instruction, environment counts |
+| Evaluate a loaded model | `python -m llm.evaluate` | Model and simple/hard test split |
+| Evaluate saved predictions | `python -m llm.evaluate_records` | Bundled or custom prediction records; no model loading required |
+
+The package includes **6,000 training examples**, **2,000 simple test examples**,
+**2,000 hard test examples**, and **14 saved prediction files** covering seven
+model variants across both test splits. Data and records are stored as lossless
+gzip files and read directly by the tools.
+
+### Evaluate saved predictions
+
+This workflow uses only the Python standard library:
+
+```bash
+# Recompute metrics for both Qwen3-8B full-parameter result files.
+python -m llm.evaluate_records --model qwen3-8b-full
+
+# Evaluate all bundled results and export summaries and error cases.
+python -m llm.evaluate_records --output-dir outputs/llm/recorded-evaluation
+```
+
+For the saved Qwen3-8B full-parameter predictions, normalized exact-match accuracy
+is **99.5% on simple** and **92.4% on hard**. Scores are recomputed from prediction
+content and reference answers. Both evaluation workflows report JSON parse rate,
+clause-schema validity, normalized exact match, and order-invariant exact match.
+
+### Train, load, and evaluate a model
+
+Use a separate Python 3.10+ environment for model workflows:
+
+```bash
+conda create -n alis-wc-llm python=3.10 -y
+conda activate alis-wc-llm
+pip install -r llm/requirements.txt
+
+# Fine-tune Qwen3-8B with LoRA.
+python -m llm.train \
+    --model-path Qwen/Qwen3-8B \
+    --config llm/configs/lora.json \
+    --output-dir outputs/llm/qwen3-8b-lora
+
+# Load the base model and trained adapter to translate one instruction.
+python -m llm.infer \
+    --model-path Qwen/Qwen3-8B \
+    --adapter-path outputs/llm/qwen3-8b-lora \
+    --num-agents 12 --num-tasks 40 --num-depots 6 \
+    --text 'Robot 2 cannot visit Task 5; Task 3 must be completed before Task 8'
+
+# Generate and evaluate predictions on the simple test split.
+python -m llm.evaluate \
+    --model-path Qwen/Qwen3-8B \
+    --adapter-path outputs/llm/qwen3-8b-lora \
+    --split simple \
+    --output outputs/llm/lora-simple.jsonl
+```
+
+For full-parameter fine-tuning, use [`llm/configs/full.json`](llm/configs/full.json).
+Full model directories can be loaded directly with `--model-path`. See the
+[LLM guide](llm/README.md) for multi-GPU training with ZeRO-3, hyperparameters,
+model directory requirements, custom datasets, and recorded-result formats.
 
 ## Evaluation
 

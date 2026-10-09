@@ -1,0 +1,120 @@
+{
+  "format_version": 1,
+  "datasets": {
+    "train": {
+      "path": "data/qa_train_6000.jsonl.gz",
+      "samples": 6000,
+      "sha256_uncompressed": "942b784e323964872fc3432129590368a38b37a2906f15e823d4e7faaef067d7"
+    },
+    "simple": {
+      "path": "data/qa_test_2000_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "47c9a82a9b498542725d7b69e8fceafafe005907913eb52107c2e1274988d2d0"
+    },
+    "hard": {
+      "path": "data/qa_test_2000_harder.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "a5d776d460581368556352ce46cdb731eeb27fa3b50248d97500db08916a5bff"
+    }
+  },
+  "records": [
+    {
+      "path": "records/qwen3-8b-full_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "a361fbd74a463e4ce071da3b74e9764fe4776dda1dbf89b527670a11497c95da",
+      "model": "qwen3-8b-full",
+      "split": "simple"
+    },
+    {
+      "path": "records/qwen3-8b-full_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "b8ba6c135f0136f77de7570469ecf486d05d34ffbada8fe21d4929614d1680bc",
+      "model": "qwen3-8b-full",
+      "split": "hard"
+    },
+    {
+      "path": "records/qwen3-8b-lora_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "aa49b2c03332b11f37e2edf4605ea072e23c733f6dda79115f13f9c35cc8745a",
+      "model": "qwen3-8b-lora",
+      "split": "simple"
+    },
+    {
+      "path": "records/qwen3-8b-lora_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "d8aaa17eed959594081fba515ba83b4dd2f129cf12d28fe027302c75e52a1ddc",
+      "model": "qwen3-8b-lora",
+      "split": "hard"
+    },
+    {
+      "path": "records/qwen3-4b_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "3bdfeb9d976e2f6a23a68b0e06e2900f49dc9d66ff1d0b278b2e0bc97ea53902",
+      "model": "qwen3-4b",
+      "split": "simple"
+    },
+    {
+      "path": "records/qwen3-4b_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "7d9cc15e101fed99f467a0bdd5e048435b77b62a6ef9f3f0c0bb75dee41b06d0",
+      "model": "qwen3-4b",
+      "split": "hard"
+    },
+    {
+      "path": "records/qwen3-30b_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "90849596eb1962fc2e8a73e4fc235399d1b950318d92a8ae4fb5e1c526f00482",
+      "model": "qwen3-30b",
+      "split": "simple"
+    },
+    {
+      "path": "records/qwen3-30b_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "ecbb1c87b0619229acf4b213b9254061ef83b78467531d3257330507d6040f8d",
+      "model": "qwen3-30b",
+      "split": "hard"
+    },
+    {
+      "path": "records/deepseek-r1-8b_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "4f506ba84aa573b3480731b231b8d86b212c15c11a8971c8200bf36e3f79daeb",
+      "model": "deepseek-r1-8b",
+      "split": "simple"
+    },
+    {
+      "path": "records/deepseek-r1-8b_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "637cbdaa4a73c749e02466fab4682b44c265ca98708d44e2be1c966f21cbcb15",
+      "model": "deepseek-r1-8b",
+      "split": "hard"
+    },
+    {
+      "path": "records/deepseek-r1-14b_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "c858c8d383dbd904684c518219fe1687bdf4ed2e7834c7875c3b8e13f420988a",
+      "model": "deepseek-r1-14b",
+      "split": "simple"
+    },
+    {
+      "path": "records/deepseek-r1-14b_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "8707ce9b916b510d4ff74d6ce84f6d2346687c9b9d3506745153291f97dc9f4b",
+      "model": "deepseek-r1-14b",
+      "split": "hard"
+    },
+    {
+      "path": "records/mistral-small-3.1-24b_simple.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "913c4cdab44f6d4ad2711ec26fc269932fdde3530a6e7f4827863d30e582909a",
+      "model": "mistral-small-3.1-24b",
+      "split": "simple"
+    },
+    {
+      "path": "records/mistral-small-3.1-24b_hard.jsonl.gz",
+      "samples": 2000,
+      "sha256_uncompressed": "a62239f59a7499cc3c5f16d8d477861c96bcc631cc0efe1f59fa21a279636914",
+      "model": "mistral-small-3.1-24b",
+      "split": "hard"
+    }
+  ]
+}
